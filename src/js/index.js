@@ -19,19 +19,71 @@
  - [O] 총 메뉴 갯수를 count하여 상단에 보여준다.
 */
 
+/*
+ Step2 요구사항 구현을 위한 전략
+ TODO localStorage Read & Write
+ - [O] localStorage에 데이터를 저장한다.
+  - [O] 메뉴 추가
+  - [O] 메뉴 수정
+  - [O] 메뉴 삭제
+ - [O] localStorage에 저장되어있는 데이터를 읽어온다.
+
+ TODO 카테고리별 메뉴판 관리
+ - [ ] 에스프레소 메뉴판을 관리한다.
+ - [ ] 프라푸치노 메뉴판을 관리한다.
+ - [ ] 블렌디드 메뉴판을 관리한다.
+ - [ ] 티바나 메뉴판을 관리한다.
+ - [ ] 디저트 메뉴판을 관리한다.
+
+ TODO 페이지 접근 시 최초 데이터 Read & Rendering
+ - [ ] 페이지를 최초로 로딩할 때 에스프레소 메뉴를 먼저 읽어온다.
+ - [ ] 에스프레소 메뉴를 페이지에 그려준다.
+
+ TODO 품절 상태 관리
+ - [ ] 품절 상태인 경우를 보여줄 수 있게, 품절 버튼을 추가하고 sold-out class를 추가하여 상태를 변경한다.
+ - [ ] 품절 버튼을 추가한다.
+ - [ ] 품절 버튼을 클릭하면 localStorage에 상태값이 저장된다.
+ - [ ] 클릭이벤트에서 가장 가까운 li태그의 class 속성 값에 sold-out을 추가한다.
+*/
+
 const $ = (selector) => document.querySelector(selector);
 
+const categoryBar = $("nav");
 const menuForm = $("#espresso-menu-form");
 const menuName = $("#espresso-menu-name");
 const menuList = $("#espresso-menu-list");
 const menuCount = $(".menu-count");
 const menuSubmitBtn = $("#espresso-menu-submit-button");
+const menuTitle = $(".heading > h2");
 
-const addMenu = () => {
-  const menuItemTemplate = (menuName) => {
-    return `
-    <li class="menu-list-item d-flex items-center py-2">
-      <span class="w-100 pl-2 menu-name">${menuName}</span>
+const switchMenu = (category) => {
+  menuTitle.innerText = `${category} 메뉴 관리`;
+};
+
+const store = {
+  setLocalStorage(menu) {
+    localStorage.setItem("menu", JSON.stringify(menu));
+  },
+  getLocalStorage() {
+    return JSON.parse(localStorage.getItem("menu"));
+  },
+};
+
+function App() {
+  this.menu = [];
+  this.init = () => {
+    if (store.getLocalStorage().length) {
+      this.menu = store.getLocalStorage();
+      render();
+    }
+  };
+
+  const render = () => {
+    const template = this.menu
+      .map((menuItem, index) => {
+        return `
+    <li data-menu-id="${index}" class="menu-list-item d-flex items-center py-2">
+      <span class="w-100 pl-2 menu-name">${menuItem.name}</span>
       <button type="button" class="bg-gray-50 text-gray-500 text-sm mr-1 menu-edit-button">
         수정
       </button>
@@ -40,31 +92,45 @@ const addMenu = () => {
       </button>
     </li>
   `;
+      })
+      .join("");
+
+    menuList.innerHTML = template;
+    updateMenuCount();
   };
 
-  menuList.insertAdjacentHTML("beforeEnd", menuItemTemplate(menuName.value));
-  menuName.value = "";
-  updatedMenuCount();
-};
+  const addMenu = () => {
+    this.menu.push({ name: menuName.value });
+    store.setLocalStorage(this.menu);
+    render();
+    menuName.value = "";
+  };
 
-const editMenu = () => {
-  const $menuName = e.target.closest("li").querySelector(".menu-name");
-  const menuName = $menuName.innerText;
-  const newName = prompt("메뉴명을 수정하세요", menuName);
-  $menuName.innerText = newName;
-};
+  const updateMenu = (e) => {
+    const menuId = e.target.closest("li").dataset.menuId;
+    const $menuName = e.target.closest("li").querySelector(".menu-name");
+    const menuName = $menuName.innerText;
+    const updatedMenuName = prompt("메뉴명을 수정하세요", menuName);
 
-const removeMenu = (e) => {
-  e.target.closest("li").remove();
-  updatedMenuCount();
-};
+    this.menu[menuId].name = updatedMenuName;
+    store.setLocalStorage(this.menu);
+    $menuName.innerText = updatedMenuName;
+  };
 
-const updatedMenuCount = () => {
-  const count = menuList.querySelectorAll("li").length;
-  menuCount.innerText = `총 ${count}개`;
-};
+  const removeMenu = (e) => {
+    const menuId = e.target.closest("li").dataset.menuId;
 
-function App() {
+    this.menu.splice(menuId, 1);
+    e.target.closest("li").remove();
+    store.setLocalStorage(this.menu);
+    store.updateMenuCount();
+  };
+
+  const updateMenuCount = () => {
+    const count = menuList.querySelectorAll("li").length;
+    menuCount.innerText = `총 ${count}개`;
+  };
+
   menuForm.addEventListener("submit", (e) => e.preventDefault());
   menuName.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
@@ -81,7 +147,7 @@ function App() {
 
   menuList.addEventListener("click", (e) => {
     if (e.target.classList.contains("menu-edit-button")) {
-      editMenu();
+      updateMenu(e);
     }
 
     if (e.target.classList.contains("menu-remove-button")) {
@@ -89,6 +155,11 @@ function App() {
       else return;
     }
   });
+
+  categoryBar.addEventListener("click", (e) => {
+    switchMenu(e.target.innerText);
+  });
 }
 
-App();
+const app = new App();
+app.init();
