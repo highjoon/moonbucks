@@ -10,8 +10,8 @@
  - [O] 사용자 입력값이 빈 값이라면 추가되지 않는다.
 
  TODO 메뉴 수정
- - [] 메뉴의 수정 버튼클릭 이벤트를 받고, 메뉴 이름을 업데이트한다.
- - [] 모달창에서 신규 메뉴명을 입력 받고, 확인 버튼을 누르면 메뉴가 수정된다.
+ - [O] 메뉴의 수정 버튼클릭 이벤트를 받고, 메뉴 이름을 업데이트한다.
+ - [O] 모달창에서 신규 메뉴명을 입력 받고, 확인 버튼을 누르면 메뉴가 수정된다.
 
  TODO 메뉴 삭제
  - [] 메뉴 삭제 버튼 클릭 이벤트를 받고, 메뉴 삭제 Confirm 모달창이 뜬다.
@@ -26,22 +26,30 @@ const menuName = $("#espresso-menu-name");
 const menuList = $("#espresso-menu-list");
 const menuCount = $(".menu-count");
 
-const submitBtn = $("#espresso-menu-submit-button");
+const menuSubmitBtn = $("#espresso-menu-submit-button");
 
 function App() {
   menuForm.addEventListener("submit", (e) => e.preventDefault());
   menuName.addEventListener("keypress", (e) => {
-    if (e.key !== "Enter") {
-      return;
-    } else {
+    if (e.key === "Enter") {
       menuName.value ? addMenu() : alert("값을 입력해주세요");
+    } else {
       return;
     }
   });
 
-  submitBtn.addEventListener("click", () => {
+  menuSubmitBtn.addEventListener("click", () => {
     menuName.value ? addMenu() : alert("값을 입력해주세요");
     return;
+  });
+
+  menuList.addEventListener("click", (e) => {
+    if (e.target.classList.contains("menu-edit-button")) {
+      const $menuName = e.target.closest("li").querySelector(".menu-name");
+      const menuName = $menuName.innerText;
+      const newName = prompt("메뉴명을 수정하세요", menuName);
+      $menuName.innerText = newName;
+    }
   });
 }
 
