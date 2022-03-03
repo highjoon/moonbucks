@@ -45,7 +45,8 @@
  - [O] 클릭이벤트에서 가장 가까운 li태그의 class 속성 값에 sold-out을 추가한다.
 */
 
-const $ = (selector) => document.querySelector(selector);
+import { $ } from "./utils/dom.js";
+import { store } from "./store/index.js";
 
 const categoryBar = $("nav");
 const menuForm = $("#espresso-menu-form");
@@ -54,15 +55,6 @@ const menuList = $("#espresso-menu-list");
 const menuCount = $(".menu-count");
 const menuSubmitBtn = $("#espresso-menu-submit-button");
 const menuTitle = $(".heading > h2");
-
-const store = {
-  setLocalStorage(menu) {
-    localStorage.setItem("menu", JSON.stringify(menu));
-  },
-  getLocalStorage() {
-    return JSON.parse(localStorage.getItem("menu"));
-  },
-};
 
 function App() {
   this.menu = {
